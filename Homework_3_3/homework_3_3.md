@@ -24,7 +24,6 @@ Device      Start      End  Sectors Size Type
 - Создаем файл скрипта, делаем его исполняемым и запускаем.
 ```bash
 [root@Zero scripts]# nano check_mount.sh
-[root@Zero scripts]# ./check_mount.sh
 [root@Zero scripts]# chmod +x check_mount.sh
 [root@Zero scripts]# ./check_mount.sh
 Введите путь до блочного устройства:
