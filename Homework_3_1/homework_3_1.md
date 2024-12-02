@@ -65,7 +65,10 @@ id testuser # если удаление прошло корректно, буд�
 sudo groupdel dev  # удаляем тестовые группы
 sudo groupdel developers
 grep -E '^dev:|^developers:' /etc/group # проверка удаления групп
+```
+
 ### Терминал
+
 ```bash 
 [root@Zero ~]# locale -a
 [root@Zero ~]# sudo dnf install glibc-langpack-ru
