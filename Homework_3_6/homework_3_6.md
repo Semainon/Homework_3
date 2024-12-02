@@ -1,98 +1,88 @@
-### Д3 3.4. Создайте файл со списком пользователей. С помощью for выведите на экран содержимое файла с нумерацией строк
+### Д3 3.6. Написать скрипт, который проверяет размер примонтированных разделов дисков,
+Аргументы скрипта:
+- вывод помощи
+- процент свободного пространства
+
+Если свободного места осталось менее процента из аргумента, отправить сообщение в телеграм
+
+1. **Поместить вызов скрипта каждые 8 минут в крон**: Выводит информацию о всех интерфейсах с их IP-адресами в компактном формате.
+2. **Поместить задание в крон не используя утилиту crontab с параметром -e**
+3. **Заменить вызов cron на systemd-timers**
+
+### Терминал
+```bash
+
+root@Zero scripts]# nano disk-check.sh
+[root@Zero scripts]# chmod +x disk-check.sh
+[root@Zero scripts]# ./disk-check.sh
+Нужна справка? (y/n): y
+Использование: ./disk-check.sh [процент]
+Этот скрипт проверяет свободное место на примонтированных разделах дисков.
+Если свободного места осталось менее указанного процента, отправляет сообщение в Telegram.
+Аргументы:
+  процент   Минимальный процент свободного пространства для отправки уведомления.
+Введите минимальный процент свободного пространства (например, 10): 99   # сообщение не отправляется
+
+[root@Zero scripts]# ./disk-check.sh
+Нужна справка? (y/n): n
+Введите минимальный процент свободного пространства (например, 10): 99
+root@Zero scripts]# ./disk-check.sh
+Нужна справка? (y/n): n
+Введите минимальный процент свободного пространства (например, 10): 1
+{"ok":true,"result":{"message_id":351,"from":{"id":**************,"is_bot":true,"first_name":"***********","username":"**********"},"chat":{"id":**********,"first_name":"**********","username":"**********","type":"private"},"date":1732916503,"text":"\u0412\u043d\u0438\u043c\u0430\u043d\u0438\u0435! \u041d\u0430 \u0440\u0430\u0437\u0434\u0435\u043b\u0435 /dev/vda2 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c \u043c\u0435\u043d\u0435\u0435 1% \u0441\u0432\u043e\u0431\u043e\u0434\u043d\u043e\u0433\u043e \u043c\u0435\u0441\u0442\u0430."}}{"ok":true,"result":{"message_id":352,"from":{"id":**********,"is_bot":true,"first_name":"**********","username":"**********"},"chat":{"id":**********,"first_name":"**********","username":"**********","type":"private"},"date":1732916503,"text":"\u0412\u043d\u0438\u043c\u0430\u043d\u0438\u0435! \u041d\u0430 \u0440\u0430\u0437\u0434\u0435\u043b\u0435 /dev/vda1 \u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c \u043c\u0435\u043d\u0435\u0435 1% \u0441\u0432\u043e\u0431\u043e\u0434\u043d\u043e\u0433\u043e \u043c\u0435\u0441\u0442\u0430."}}
+[root@Zero scripts]# 
+
+```
 
 
-### Команды 
-
-**`getent passwd | cut -d: -f1 | nl > "$filename"`**: 
-- getent passwd: получаем информацию обо всех пользователях из системной БД пользователей;
-- cut -d: -f1 | nl > "$filename" - извлекаем их имена и добавляем нумерацию строк, сохраняя результат в файл.
-
-### get_users.sh v.1 | Скрипт cоздает файл list_users.txt с нумерованным списком пользователей или перезаписывает, если он уже существует. С помощью for выводится на экран содержимое файла с нумерацией строк
+### disk-check.sh v.2 | Скрипт проверяет размер примонтированных разделов дисков, отправляет уведомление в Telegram, если свободного места осталось менее указанного процента
 
 ```bash
 #!/bin/bash
 
-# Имя файла для списка пользователей
-filename="list_users.txt"
+# Функция для вывода помощи
+show_help() {
+    cat << EOF
+Использование: $0 [процент]
 
-# Получить список пользователей и сохранить в файл
-getent passwd | cut -d: -f1 > "$filename"
+Этот скрипт проверяет свободное место на примонтированных разделах дисков.
+Если свободного места осталось менее указанного процента, отправляет сообщение в Telegram.
 
-# Вывод содержимого файла в терминал с нумерацией строк
-echo "Список пользователей:"
-count=1
-for line in $(cat "$filename"); do
-  echo "$count. $line"
-  ((count++))  # Увеличение счетчика
+Аргументы:
+  процент   Минимальный процент свободного пространства для отправки уведомления.
+EOF
+}
+
+# Запрос справки у пользователя
+read -p "Нужна справка? (y/n): " need_help
+if [[ "$need_help" == "y" ]]; then
+    show_help
+    exit 0
+fi
+
+# Запрос ввода процента
+read -p "Введите минимальный процент свободного пространства (например, 10): " THRESHOLD
+
+# Проверка, является ли аргумент числом
+if ! [[ "$THRESHOLD" =~ ^[0-9]+$ ]]; then
+    echo "Ошибка: аргумент должен быть целым числом."
+    exit 1
+fi
+
+# Получение информации о свободном месте на дисках
+df -h --output=source,pcent | grep -vE '^Filesystem|tmpfs|cdrom' | while read -r line; do
+    PARTITION=$(echo $line | awk '{print $1}')
+    USAGE=$(echo $line | awk '{print $2}' | sed 's/%//')
+
+    # Проверка, если использование больше порога
+    if [ "$USAGE" -ge "$THRESHOLD" ]; then
+        MESSAGE="Внимание! На разделе $PARTITION осталось менее $THRESHOLD% свободного места."
+        
+        # Отправка сообщения в Telegram
+        curl -s -X POST "https://api.telegram.org/bot<MY_BOT_TOKEN>/sendMessage" \
+        -d "chat_id=<MY_CHAT_ID>" \
+        -d "text=$MESSAGE"
+    fi
 done
 ```
 
-### get_users.sh v.2 | Без использованием for (строки нумеруем командой nl)
-
-```bash
-#!/bin/bash
-
-# Имя файла для списка пользователей
-filename="list_users.txt"
-
-# Получить список пользователей и сохранить в файл с нумерацией
-getent passwd | cut -d: -f1 | nl > "$filename"
-
-# Вывод содержимого файла в терминал
-echo "Список пользователей:"
-cat "$filename"
-```
-
-```bash
-[root@Zero scripts]# nano get_users.sh
-[root@Zero scripts]# chmod +x get_users.sh
-[root@Zero scripts]# ls -l
-total 16
--rwxr-xr-x. 1 root     root  981 ноя 28 01:33 check_mount.sh
--rwxr-xr-x. 1 root     root  681 ноя 28 00:16 create_file.sh
-drwx------. 2 testuser dev    62 ноя 27 13:53 delme
--rwxr-xr-x. 1 root     root  403 ноя 28 18:20 get_users.sh
--rw-r--r--. 1 root     root    0 ноя 28 00:17 testfile
--rwxr-xr-x. 1 root     root 3882 ноя 27 22:46 user_info.sh
-[root@Zero scripts]# ./get_users.sh
-Список пользователей:
-     1  root
-     2  bin
-     3  daemon
-     4  adm
-     5  lp
-     6  sync
-     7  shutdown
-     8  halt
-     9  mail
-    10  operator
-    11  games
-    12  ftp
-    13  nobody
-    14  dbus
-    15  systemd-coredump
-    16  systemd-resolve
-    17  tss
-    18  polkitd
-    19  clevis
-    20  unbound
-    21  libstoragemgmt
-    22  setroubleshoot
-    23  cockpit-ws
-    24  cockpit-wsinstance
-    25  sssd
-    26  chrony
-    27  sshd
-    28  tcpdump
-    29  testuser
-[root@Zero scripts]# ls -l
-total 20
--rwxr-xr-x. 1 root     root  981 ноя 28 01:33 check_mount.sh
--rwxr-xr-x. 1 root     root  681 ноя 28 00:16 create_file.sh
-drwx------. 2 testuser dev    62 ноя 27 13:53 delme
--rwxr-xr-x. 1 root     root  403 ноя 28 18:20 get_users.sh
--rw-r--r--. 1 root     root  435 ноя 28 18:28 list_users.txt
--rw-r--r--. 1 root     root    0 ноя 28 00:17 testfile
--rwxr-xr-x. 1 root     root 3882 ноя 27 22:46 user_info.sh
-
-```
