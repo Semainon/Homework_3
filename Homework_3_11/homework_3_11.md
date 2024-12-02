@@ -58,20 +58,12 @@
 ...
 
 # после тестов прерываем работу service_check.sh 
-root@Zero logs]# kill  -9  63060 # прерываем работу service_check.sh 
+root@Zero logs]# kill  -9  63060 
+
 root@Zero logs]# ps aux | grep bash
 root       62396  0.0  0.3  30988  6292 pts/3    Ss   20:07   0:00 -bash
 root       62438  0.0  0.3  30724  6064 pts/2    Ss+  20:08   0:00 -bash
 root       64416  0.0  0.0  12212  1212 pts/3    R+   21:28   0:00 grep --color=auto bash
-```
-
-### Терминал 2
-```bash
-
-# Запускаем запустит процесс sleep в фоновом режиме в другом терминал.
-
-[root@Zero ~]# sleep 100 &
-[1] 62421
 ```
 
 
