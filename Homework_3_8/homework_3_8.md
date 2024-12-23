@@ -111,7 +111,7 @@ Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
  pkts bytes target     prot opt in     out     source               destination    
 
 # -------------------------------------------------------------------------------
-# Здесь были всякие проверки, эксперименты и ошибки при подклчении:  
+# Здесь были всякие проверки, эксперименты и ошибки при подключении:  
 
 # Проверка с использованием IP-адреса: 
 # [root@Zero sbin]# sudo ip netns exec nginx_namespace curl -I http://127.0.0.1
@@ -154,7 +154,7 @@ Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
     inet 127.0.0.1/8 scope host lo
        valid_lft forever preferred_lft forever
-# Делаем запрос через IP-адрес вашего veth интерфейса:      
+# Делаем запрос через IP-адрес veth интерфейса:      
 [root@Zero sbin]# sudo ip netns exec nginx_namespace curl -I http://192.168.1.100
 HTTP/1.1 200 OK
 Server: nginx/1.25.0
@@ -164,7 +164,7 @@ Content-Length: 2
 Connection: keep-alive
 Content-Type: text/plain
 
-# Все остальные вариаанты тоже теперь работают (скрин, nginx_namespace_1.png): 
+# Все остальные варианты тоже теперь работают (скрин: nginx_namespace_1.png): 
 
 [root@Zero sbin]# sudo ip netns exec nginx_namespace curl -I http://127.0.0.1
 HTTP/1.1 200 OK
@@ -215,7 +215,7 @@ sudo /usr/local/nginx/sbin/nginx -s stop
 # ошибки
 sudo ip netns exec nginx_namespace cat /usr/local/nginx/logs/error.log
 
-# проверка, слушает ли Nginx порт 80 в nginx_namespace, и вывод информации о процессе, который использует этот порт.
+# проверка, слушает ли Nginx порт 80 в nginx_namespace, и вывод информации о процессе, который использует этот порт
 sudo ip netns exec nginx_namespace netstat -tulpn | grep :80 
 
 # вывод процессов Nginx, работающих в пространстве имен nginx_namespace 

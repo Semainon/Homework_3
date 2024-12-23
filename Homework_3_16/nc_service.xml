@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+    <short>Netcat Service</short>
+    <description>Service for netcat listening on port 8888</description>
+    <port protocol="tcp" port="8888"/>
+</service>
