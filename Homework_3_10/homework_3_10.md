@@ -22,7 +22,7 @@
 ### Терминал 
 
 ```bash
-# cсоздаем в директории скрипта тестовый файл 
+# cоздаем в директории скрипта тестовый файл 
 [root@Zero scripts]# nano users.txt
 [root@Zero scripts]# cat users.txt
 zero 1633036800 - /home/zero
